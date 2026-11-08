@@ -159,7 +159,7 @@ $expected = @(Get-ChildItem $packsRoot -Recurse -File | Where-Object { (Get-Rela
 $tmp = Join-Path ([IO.Path]::GetTempPath()) ('rules-library-' + [guid]::NewGuid())
 New-Item -ItemType Directory $tmp | Out-Null
 try {
-    & (Join-Path $root 'install.ps1') -Target $tmp -Packs $packs *> $null
+    & (Join-Path $root 'install.ps1') -Target $tmp -All *> $null
     $installed = @(Get-ChildItem (Join-Path $tmp '.cursor') -Recurse -File).Count
     if ($installed -ne $expected) { $errors.Add("Test install copied $installed files; expected $expected") }
 }

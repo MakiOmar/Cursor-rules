@@ -8,7 +8,7 @@ A merged, deduplicated library of the rules from `cursorrules1/` (storefront pro
 .\install.ps1 -Target D:\Projects\my-app -Packs laravel,qwik,admin,public-site
 ```
 
-`core` is always installed. `.\install.ps1 -List` shows every pack with its rule and skill counts. Existing files in the project are kept unless you pass `-Force`, and rules the library no longer has (renamed, moved, or removed) are reported so you can delete them. Rules land in `.cursor/rules/<pack>/`, skills in `.cursor/skills/`.
+`core` is always installed. `.\install.ps1 -List` shows every pack with its rule and skill counts. `-All` (instead of `-Packs`) installs every pack — handy for a sandbox, but in a real project it also brings the `wordpress` rule (glob `**/*.php`, so it attaches to Laravel files) and both frontend packs. Existing files in the project are kept unless you pass `-Force`, and rules the library no longer has (renamed, moved, or removed) are reported so you can delete them. Rules land in `.cursor/rules/<pack>/`, skills in `.cursor/skills/`.
 
 | Pack | Install when the project has… |
 |------|-------------------------------|

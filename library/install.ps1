@@ -17,12 +17,20 @@ Packs are discovered from the packs/ folder, so a new pack folder is installable
 
 .EXAMPLE
 .\install.ps1 -Target D:\Projects\shop -Packs laravel -Force   # overwrite files already in the project
+
+.EXAMPLE
+.\install.ps1 -Target D:\Projects\sandbox -All -Force   # every pack
 #>
 [CmdletBinding(DefaultParameterSetName = 'Install')]
 param(
-    [Parameter(Mandatory, ParameterSetName = 'Install')][string]$Target,
+    [Parameter(Mandatory, ParameterSetName = 'Install')]
+    [Parameter(Mandatory, ParameterSetName = 'All')]
+    [string]$Target,
     [Parameter(ParameterSetName = 'Install')][string[]]$Packs = @(),
-    [Parameter(ParameterSetName = 'Install')][switch]$Force,
+    [Parameter(Mandatory, ParameterSetName = 'All')][switch]$All,
+    [Parameter(ParameterSetName = 'Install')]
+    [Parameter(ParameterSetName = 'All')]
+    [switch]$Force,
     [Parameter(Mandatory, ParameterSetName = 'List')][switch]$List
 )
 
@@ -45,7 +53,7 @@ if ($List) {
 }
 
 # `powershell -File` passes a comma-separated pack list as one string, so split on commas as well.
-$requested = $Packs | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+$requested = if ($All) { $available } else { $Packs | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ } }
 $selected = @('core') + @($requested) | Select-Object -Unique
 
 $unknown = $selected | Where-Object { $_ -notin $available }

@@ -1,0 +1,16 @@
+---
+description: Native admin select/checkbox must stay readable in dark mode (color-scheme, explicit colors)
+globs: **/components/admin/**/*.tsx,**/routes/**/admin/**/*.tsx
+alwaysApply: false
+---
+
+# Native `<select>` and checkbox contrast (dark mode)
+
+Browsers paint native option popups and checkboxes from the control's `color-scheme`. A dark shell with only `dark:bg-*` produces blank dropdowns and invisible unchecked boxes.
+
+- Use the project's shared class constants for native selects, options, and checkboxes (one module, e.g. `native-select-classes.ts`); don't restyle per screen.
+- **Selects:** explicit text **and** background for light and dark (`bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100`) plus `[color-scheme:light] dark:[color-scheme:dark]`. Put the option class on every `<option>`.
+- Set `selected={current === option}` on each option when the value comes from a loader or signal; SSR ignores `select[value]`, so a reload shows the first option.
+- Option labels are translated, not raw enum values (`draft`, `published`).
+- **Checkboxes:** unchecked state has a visible border and background in both themes; checked state is primary fill with a white checkmark. Keep the global checkbox styles in the admin stylesheet.
+- Custom listboxes are fine; this targets native controls.

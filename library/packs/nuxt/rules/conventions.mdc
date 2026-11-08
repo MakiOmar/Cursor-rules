@@ -1,0 +1,16 @@
+---
+description: Nuxt — typed SFCs, SSR-safe data fetching and state, runtimeConfig, cookie auth with Laravel
+globs: **/nuxt.config.ts,**/app.vue,**/pages/**/*.vue,**/components/**/*.vue,**/layouts/**/*.vue,**/composables/**,**/stores/**,**/server/**
+alwaysApply: false
+---
+
+# Nuxt conventions
+
+- `<script setup lang="ts">` with strict TypeScript; typed props and emits.
+- Page data via `useFetch` / `useAsyncData` (SSR-safe, deduplicated, unique keys); `$fetch` only in event handlers and server routes. Templates handle `pending`, `error`, and empty results.
+- Shared logic in `composables/use*.ts`. Shared state via `useState` or Pinia — never module-level `ref`s, which leak between SSR requests.
+- Config through `runtimeConfig`; only non-secrets go under `public`. No `process.env` in app code.
+- Auth with a Laravel API: Sanctum SPA cookies (`statefulApi()`, `/sanctum/csrf-cookie` first) or an HttpOnly cookie handled by a server route — never tokens in `localStorage`. During SSR forward cookies with `useRequestHeaders(['cookie'])`.
+- Route guards use `defineNuxtRouteMiddleware`; the API still authorizes every request.
+- Heavy client-only widgets (charts, editors) go in `<ClientOnly>` or `*.client.vue` and load lazily (`Lazy` component prefix).
+- Head and SEO via `useSeoMeta` / `useHead` (`public-site/seo-head.mdc`).

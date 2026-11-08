@@ -1,0 +1,24 @@
+---
+description: Admin/dashboard routes are never indexed — noindex meta, X-Robots-Tag, no sitemap entries
+globs: **/routes/**/admin/**/layout.tsx,**/layouts/admin*,**/routes/robots.txt/**,**/router-head*
+alwaysApply: false
+---
+
+# Dashboard: no search indexing
+
+Every admin/dashboard surface stays out of search indexes in every environment, including staging.
+
+## Required
+
+- **Meta:** every admin document emits `<meta name="robots" content="noindex, nofollow">`, enforced centrally (admin layout `head` plus a router-head guard on the admin path prefix), not per route.
+- **Header:** the admin layout sets `X-Robots-Tag: noindex, nofollow` on HTML responses.
+- **Sitemap:** never include admin URLs.
+- **No marketing tags** on admin pages: no canonical, Open Graph, or JSON-LD.
+
+## robots.txt
+
+Don't rely on `Disallow` for admin paths: crawlers blocked by robots.txt never see the `noindex`, so a linked admin URL can still be indexed. The `noindex` meta, header, and authentication are the controls. If the project generates robots.txt, do it dynamically from the locale list — never a static per-locale file.
+
+## When adding admin routes
+
+Confirm the layout `head` and header still apply, and view-source `/…/admin/login` for the robots meta and the absence of a canonical.

@@ -1,0 +1,27 @@
+---
+description: Qwik City routeAction$ — programmatic submit pitfalls, QRL boundaries, reliable browser saves
+globs: **/src/routes/**/*.tsx,**/src/lib/**/*-actions.ts
+alwaysApply: false
+---
+
+# Qwik City `routeAction$` and programmatic saves
+
+These patterns avoid silent "success" with no payload: `await action.submit(...)` resolving while `value` is `undefined`, or saves that update a different store than the one you read.
+
+## Don't pass an `ActionStore` through a nested `$()`
+
+- **Avoid:** `const submit = $(async (action, fields) => { await action.submit(fields); return action.value; })` called as `submit(updateAction, …)`. The store crosses a QRL boundary, and `submit()` may not update the instance you read `.value` from.
+- **Prefer:** call `updateAction.submit(...)` (or a plain module-level helper) in the same `component$` closure where `useXAction()` was called; pass fields only.
+
+## Don't assume programmatic `submit()` returns data
+
+Qwik City resolves the promise from `q-data.json` via `clientData.loaders[action.id]`. If that slot is missing you get `{ status, value: undefined }` even though the request completed. Treat `undefined` as a failure mode when designing saves.
+
+## Reliable mutations
+
+- **Browser saves:** plain `run*FromBrowser` helpers in `src/lib/**/*-actions.ts` that call the API client directly (cookies + CSRF), sharing a `run*WithApiClient` core with the `routeAction$` used for SSR.
+- **List / delete / bulk** with programmatic submit: a plain async form-data helper (not a nested `$()`), or migrate to the direct-client pattern.
+- **Full form posts:** prefer `<Form action={action}>`, the framework's default path.
+- On 401/403, return `fail(...)` from the action instead of throwing (a throw reloads the page).
+
+`console.log` inside `routeAction$` / `routeLoader$` prints in the server terminal, not the browser (see the `qwik-ssr-debug` skill).

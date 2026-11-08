@@ -1,0 +1,15 @@
+---
+description: Qwik loading feedback — global navigation indicator plus local busy state for submits and async clicks
+alwaysApply: false
+---
+
+# Pending / loading feedback (Qwik)
+
+Users always see that something is happening after a click, submit, or async action; silent freezes cause double submits.
+
+- **Global layer:** one pending indicator in the root layout. Route navigation (`<Link>`, `useNavigate`) drives it through `useLocation().isNavigating` — no per-link code. Don't add a second global loader.
+- **Client async work** (form submits, add to cart, logout, search, API call followed by `nav()`) is wrapped in one shared helper that increments the global pending count and sets a local `submitting` signal.
+- **Forms:** `preventdefault:submit`, wrap the async body in the helper, disable the submit button and change its label while busy ("Saving…").
+- **In-app search:** `preventdefault:submit` + `useNavigate()`, not a native `<form method="get">`, so `isNavigating` fires.
+- Internal links use `<Link>` / `useNavigate()`, not raw `<a href>`.
+- Background `useVisibleTask$` work isn't user-initiated and needs no indicator; instant local updates may skip it but keep the control disabled while async work runs.

@@ -1,0 +1,29 @@
+---
+description: Rules router — which pack applies where, git policy, and how to add rules
+alwaysApply: true
+---
+
+# Rules router
+
+Rules are grouped in pack folders under `.cursor/rules/`. Only installed packs exist in this project. Most rules attach by file glob; the rest are agent-requested, so read any rule whose description matches the task before editing.
+
+| Pack | Applies to |
+|------|------------|
+| `core/` | Any project: docs sync, deploy safety |
+| `laravel/` | Laravel backend (`app/`, `bootstrap/`, `config/`, `database/`, `routes/`) |
+| `qwik/` | Qwik City frontend (`src/routes`, `src/lib`, `vite.config.ts`) |
+| `nuxt/` | Nuxt frontend (`pages/`, `components/`, `composables/`, `server/`) |
+| `admin/` | Admin dashboard routes and components |
+| `public-site/` | Public pages: SEO, head tags, assets, contact privacy |
+| `cms-builder/` | Visual page/theme builder and addon host (Credocode-based projects) |
+| `wordpress/` | WordPress themes and plugins |
+
+Skills (load on demand from `.cursor/skills/`): `new-project`, `deploy`, `laravel-hardening`, `qwik-ssr-debug`, `builder-json-translation`.
+
+## Git
+
+Commit, push, or deploy only when the user asks.
+
+## Project rules
+
+Pack folders come from the shared rules library; change shared rules there, not in this copy. Project-only rules go in `.cursor/rules/project/`: frontmatter on line 1, `alwaysApply: false`, `**/`-prefixed comma-separated globs, and nothing the global User Rule already says.

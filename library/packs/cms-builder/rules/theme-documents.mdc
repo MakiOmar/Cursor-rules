@@ -1,0 +1,13 @@
+---
+description: Theme Builder documents live on chrome_layouts kinds plus theme_templates conditions
+globs: **/app/Services/Appearance/ThemeTemplate*.php,**/app/Services/Appearance/ChromeLayout*.php,**/routes/**/admin/appearance/**
+alwaysApply: false
+---
+
+# Theme Builder documents
+
+Don't add a second layout table. Theme documents are `chrome_layouts.kind`: `header` | `footer` | `body` | `single` | `archive` | `loop_item` | `overlay`.
+
+`theme_templates` stores conditions, header/footer/body foreign keys, and `document_type`. Public cascade: record FK → matching template slot → type default → site default.
+
+When a published single/archive body matches, render that tree; otherwise keep the coded route template as the fallback.

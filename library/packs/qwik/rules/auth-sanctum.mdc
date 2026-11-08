@@ -1,0 +1,40 @@
+---
+description: Laravel + Qwik auth — HttpOnly-cookie session, single API client, POST logout, never expose the token
+globs: **/src/routes/**/login/**,**/src/routes/**/logout/**,**/src/lib/api/**,**/src/lib/**/auth*
+alwaysApply: false
+---
+
+# Laravel + Qwik authentication (HttpOnly cookie)
+
+The Sanctum token never reaches browser JavaScript.
+
+## Session storage
+
+- The full session (including the token) lives only in an HttpOnly cookie (e.g. `auth_session`) set server-side with Qwik's `cookie.set()`: `httpOnly`, `secure` in production, `sameSite: 'lax'` (or `'strict'`), `path: '/'`, and the narrowest `domain` that works — a parent domain like `.example.com` exposes it to every subdomain.
+- `localStorage` may hold only the public profile `{ user, token: 'sanctum_cookie', expiresAt }`. Never write the raw token to `localStorage`, `sessionStorage`, or anything hydrated into the page.
+- A session counts as signed in only while `expiresAt` is in the future.
+
+## Calling the API
+
+- **One authenticated client and one public client.** No new HTTP client or token store.
+- **Browser:** same-origin `/api` with `credentials: 'include'` (e.g. `getApiClient(null)`). Never copy a Bearer token into client-side calls.
+- **SSR loaders/actions:** forward the cookie (`getApiClient(extractCookieHeader(cookie, request))`); SSR may read the token from the forwarded HttpOnly cookie.
+- Laravel promotes the cookie to `Authorization: Bearer` before `auth:sanctum`; don't also enable `EnsureFrontendRequestsAreStateful` (`laravel/middleware.mdc`).
+- **CSRF:** because a cookie now authenticates, state-changing routes need a defence beyond `SameSite` — an Origin/Referer check or XSRF token on POST/PUT/PATCH/DELETE.
+- Non-browser clients (curl, tests) may still send `Authorization: Bearer`.
+
+## Login
+
+`routeAction$`: refresh CSRF → POST the login endpoint → set the HttpOnly cookie → store the public profile → redirect to the admin home. Strip trailing slashes from login routes (avoids 404s).
+
+## Logout
+
+- **POST only** (`<Form action={useLogoutAction()}>` or a POST through the API client). Never a GET loader or plain link — prefetching or a cross-site link would log users out.
+- Server side: call the backend logout (best effort), `cookie.delete()` both the app session cookie and the Laravel session cookie, redirect to login. Client side: clear the public profile from `localStorage`.
+- Never try to delete HttpOnly cookies from client JS.
+- Backend logout clears both cookies, works when the user is already null (expired token), and returns 204.
+
+## Route protection
+
+- The admin layout `routeLoader$` checks auth from the cookie and redirects: unauthenticated → login, authenticated on the login page → home.
+- `localStorage` doesn't exist in loaders; only client code reads it (e.g. to drop a stale profile after logout).

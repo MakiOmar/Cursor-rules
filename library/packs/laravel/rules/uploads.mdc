@@ -1,0 +1,24 @@
+---
+description: Media uploads — MIME/size validation, SVG sanitization, no executable types
+globs: **/app/**/*Media*.php,**/app/**/*Upload*.php,**/config/media.php
+alwaysApply: false
+---
+
+# Upload security
+
+- Validate size and MIME (extension **and** detected type) before storing, through one shared request or service method — never `addMedia($file)` straight from a controller.
+- Sanitize every `image/svg+xml` upload with an allowlist-based SVG sanitizer (elements and attributes) before writing it. Reject the file if sanitizing fails. As a backstop, also reject output that still contains `<script`, `on*=` handlers, `javascript:`, or `foreignObject`.
+- Never allow executable types (HTML, PHP, JS) in the media config.
+- Files that are rendered inline as SVG (icons) must be SVG-only and sanitized; raster images render through `<img>`.
+- Heavy post-processing (WebP, thumbnails) is queued (`laravel/queues.mdc`).
+- Don't change the public URL shape of stored files without a dedicated migration.
+
+```php
+// BAD
+$model->addMedia($file)->toMediaCollection('hero');
+
+// GOOD
+$this->mediaService->prepareUploadedFile($file);   // validate + sanitize
+$media = $model->addMedia($file)->toMediaCollection($collection);
+$this->mediaService->queueOrFinalize($media);
+```

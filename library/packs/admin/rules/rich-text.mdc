@@ -1,0 +1,23 @@
+---
+description: Admin rich text — TinyMCE classic editor with visual/code modes; store HTML without extra entity encoding
+globs: **/components/admin/**/*RichText*,**/components/admin/**/*Editor*,**/app/**/*Sanitiz*.php
+alwaysApply: false
+---
+
+# Admin rich text (WYSIWYG)
+
+## Editor
+
+- Admin-edited content fields use a WordPress Classic-style **TinyMCE** editor, not a plain `<textarea>` and not a block editor unless requested.
+- Provide **visual and code/source modes** with a clear toggle; switching never loses markup or unsaved edits.
+- Controls: format selector, bold/italic, lists, blockquote, alignment, links, tables, media when relevant, fullscreen, source.
+- Reuse the project's editor wrapper before adding a dependency. Self-hosted TinyMCE 7+ needs `license_key: 'gpl'` (or a commercial key).
+- If the editor syncs to a hidden field, the visible input is still the editor UI.
+- Plain `<textarea>` only for intentionally raw text (JSON, YAML, logs, short notes, prompts, code); say so in the label/help text.
+
+## Storage and API
+
+- Sanitize **structure and URLs** on the backend (allowlist), not prose. Don't `htmlspecialchars()` attribute values before `DOMDocument::saveHTML()` — that double-escapes (`&amp;amp;`).
+- The sanitizer decodes stray entities to UTF-8; plain-text escaping is only for plain-text fields, never for sanitized rich HTML.
+- Return rich HTML as plain JSON strings; don't HTML-escape whole payloads in resources or accessors.
+- The editor receives normal HTML, not text that literally shows `&lt;p&gt;`.

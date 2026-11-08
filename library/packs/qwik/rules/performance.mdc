@@ -1,0 +1,34 @@
+---
+description: Qwik bundle and render performance — small chunks, lazy heavy deps, non-blocking CSS/JS/fonts/data
+globs: **/vite.config.ts,**/src/root.tsx,**/src/routes/**/layout.tsx,**/src/components/router-head/**
+alwaysApply: false
+---
+
+# Qwik performance: minimal chunks, nothing render-blocking
+
+Goal: each downloaded chunk carries only what that route or interaction needs, and first paint never waits on optional assets or data.
+
+## JS chunks
+
+- Qwik splits at `$` boundaries and by route; anything imported by a **layout** is pulled into every child route. Transitive imports count.
+- Heavy libraries (rich-text editors, charts, maps, datatables, SweetAlert, big UI kits) live on the route or feature component that uses them, loaded with dynamic `import()` on first use (mount, click, or `useVisibleTask$`). Never import them at top level in shared components, `root.tsx`, or layouts.
+- No fat barrel imports (`~/components/admin`, `~/lib`); import the specific file.
+- Layouts stay thin; gate optional modules with `features.*` and don't import disabled code paths at all.
+- Rarely shown UI (modals, tabs, admin panels) goes in its own `component$` file imported only where needed.
+- Pass ids/primitives across `$` boundaries, not large objects or DOM nodes.
+- `manualChunks`: vendor-only, for large libraries used by many routes; never sweep app code into a shared blob. No side-effect imports (`import './setup'`) in shared files.
+
+## CSS, fonts, scripts
+
+- Import CSS only in the route or component that uses it (`cssCodeSplit: true`); never import heavy npm CSS (editor skins, dialog CSS) in root/layout/shared components — load it with the feature (`media="print"` → `onload` → `all`).
+- No new synchronous `<link rel="stylesheet">` or `<script src>` in the router head unless needed for first paint (theme, `dir`, locale). Fonts load async; `preconnect` only.
+- Inline critical CSS (FOUC gate, header shell, fallback fonts) stays under ~2 KB in one place; don't put `body { visibility: hidden }` in the main stylesheet.
+
+## Data and images
+
+- Layout `routeLoader$` loads only the shell (branding, auth gate, footer); page data belongs to the page loader. Parallelize independent fetches.
+- LCP image: `loading="eager"` + `fetchpriority="high"`; everything below the fold `loading="lazy"`.
+
+## Verify
+
+After bundle-affecting changes, build and check the largest new `q-*.js` chunks (no jump of hundreds of KB unless the route needs it), and confirm in the Network tab that public pages load no admin-only libraries and nothing but HTML + one small CSS chunk (+ LCP image) precedes first paint. If a blocking resource is unavoidable, say why in the PR.

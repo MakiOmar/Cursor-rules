@@ -1,0 +1,14 @@
+---
+description: Laravel migrations — reversible down(), indexes, soft deletes, data backfills
+globs: **/database/migrations/**
+alwaysApply: false
+---
+
+# Migrations
+
+- Every migration has a working `down()`. If a change is truly irreversible (dropped data, lossy type change), throw in `down()` with the reason, and back up before running it (`core/deploy-safety.mdc`).
+- Never edit a migration that has run in a shared environment; add a new one.
+- Foreign keys use `foreignId()->constrained()`. MySQL indexes them automatically; on PostgreSQL and SQLite add `->index()`. Index columns used in large-table `where`/`orderBy`, composite indexes in query order.
+- Soft deletes only when the domain needs trash/restore or an audit trail. Validate uniqueness with `Rule::unique(...)->withoutTrashed()`, and decide explicitly whether a trashed value may be reused (a plain unique index blocks it).
+- Backfills on large tables run chunked in their own migration or command, not mixed into a schema change.
+- `DB::statement` only for what the schema builder can't express; comment why.

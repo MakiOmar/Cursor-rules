@@ -1,0 +1,43 @@
+---
+description: Public page SEO output — head tags, canonical, OG/Twitter, hreflang, JSON-LD, sitemap, staging noindex
+globs: **/router-head*,**/routes/robots.txt/**,**/routes/sitemap*,**/lib/seo/**
+alwaysApply: false
+---
+
+# Public pages ship complete SEO
+
+Every public page you create or edit gets SEO in the same change. Admin pages are the opposite: `admin/noindex.mdc`.
+
+## Every public route exports `head`
+
+Values come from the record's SEO data and the defaults cascade (`public-site/seo-content-model.mdc`) through the shared head helper — don't hand-roll titles per route.
+
+1. `title` — unique, ≤ ~60 characters, with the site-name template applied.
+2. `meta description` — unique, ≤ ~160 characters.
+3. Canonical — the page's own URL on the **site origin** (never the API host); override when query params, pagination, or a preferred URL differ.
+4. Open Graph: `og:title`, `og:description`, `og:type`, `og:url`, `og:image` (absolute URL).
+5. Twitter: `twitter:card` (default `summary_large_image`) plus title, description, and image.
+6. `robots: noindex, nofollow` on utility pages (cart, checkout, account, search results, thin or duplicate pages).
+
+Site-wide tags (`og:site_name`, `og:locale`, default `og:type`, `fb:app_id`, image alt, Twitter mirrors) are added once in the public layout, not per route.
+
+## Structured data
+
+- JSON-LD for the page entity (`Article`/`BlogPosting`, `Product` + `Offer`, `Service`, `CreativeWork`), a `BreadcrumbList` matching the visible trail, and `Organization`/`WebSite` on the home page.
+- Build it from real API data; merge the record's admin `schema` override last.
+- Emit it through one JSON-LD serializer in head `scripts` that escapes `</script>`; never interpolate raw strings.
+
+## Multilingual
+
+`hreflang` alternates for every enabled locale plus `x-default`; `<html lang>` matches the rendered locale; content never falls back to another language (`laravel/locale-no-fallback.mdc`).
+
+## Sitemap and robots
+
+- `sitemap.xml` and `robots.txt` are generated routes built from published content; no static `public/robots.txt`.
+- Unpublished, deleted, or missing records return **404** and are excluded from the sitemap.
+- New public content type: add it to the sitemap generator.
+- **Staging/pre-launch:** one env flag (e.g. `PUBLIC_ROBOTS_DISALLOW_ALL=true`) switches on `Disallow: /`, an empty sitemap, site-wide `noindex` meta, and `X-Robots-Tag`. Leave it off in production.
+
+## Performance is SEO
+
+Keep Core Web Vitals: eager + `fetchpriority="high"` on the LCP image, lazy below the fold, non-blocking head assets (`qwik/performance.mdc`).

@@ -1,0 +1,14 @@
+---
+description: Card/item grid widgets expose responsive column controls through the shared helper
+globs: **/app/Services/Appearance/KitRegistry.php,**/src/lib/marketing/grid-columns.ts,**/src/components/admin/appearance/**
+alwaysApply: false
+---
+
+# Grid widgets: responsive columns
+
+Applies to any kit or widget that renders a card or item grid (projects, services, blog preview, logo cloud).
+
+1. **Setting:** `columns` as `{ mobile, tablet, desktop }` integers 1–4 using the `responsive_columns` field type.
+2. **Defaults** match card size: large tiles 1 / 2 / 2, compact cards 1 / 2 / 3. When retrofitting, default to the current layout so saved pages don't shift.
+3. **Render** class names with the shared grid-columns helper. Never hard-code `sm:grid-cols-2 lg:grid-cols-3`, and never build dynamic class strings (`grid-cols-${n}`) — Tailwind's JIT misses them; extend the helper's static map.
+4. **Admin** uses the shared responsive-columns field; labels in every UI language.

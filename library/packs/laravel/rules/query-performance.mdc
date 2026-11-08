@@ -1,0 +1,35 @@
+---
+description: Eloquent query performance and per-request memoization — hidden N+1, batching, columns, settings once
+alwaysApply: false
+---
+
+# Query performance and per-request memoization
+
+## Queries
+
+- **No queries inside loops, including hidden ones.** Before calling a helper inside `map`/`foreach`, check what it queries (settings loaders, path/slug resolvers, "find parent" fallbacks). Resolve once outside the loop and pass the value in.
+- **Batch by ids:** collect ids, load once with `whereIn`, look up from a keyed map.
+- **Eager-load everything read later**, including relations used by presenters or dynamic tags. Constrain to the locales you need: `with(['translations' => fn ($q) => $q->whereIn('locale', [$present, $primary])])`.
+- **Select only needed columns**; never pull large JSON columns when only ids/slugs/titles are used.
+- **Bound every read:** `paginate()` / `limit()`; walk trees by ancestor ids up to a max depth instead of loading the table.
+- **No `Schema::hasTable()` on request paths** (it hits `information_schema`); keep schema guards in commands and installers.
+
+```php
+// BAD — Paths::forPage() reads the front-page setting once per row
+$pages->map(fn ($p) => Paths::forPage($p));
+
+// GOOD — resolve once, pass in
+$frontSlug = FrontPage::slug();
+$pages->map(fn ($p) => Paths::forPage($p, $frontSlug));
+```
+
+## Per-request memoization
+
+- Values read many times per request (settings, site languages, default locale, front page, registries) are computed once per request; DB-backed ones are also cached across requests and flushed by every write path.
+- Use a scoped-singleton memo (`app()->scoped(...)`) exposing `remember($key, fn)` / `forget($key)`; it must store `null` results too.
+- Don't use `once()` or hand-rolled `static` caches for DB-backed values: they can outlive a request in queue workers and Octane. Use them only for values that never change at runtime.
+- Registries are built once per request, not per block.
+
+## Verify
+
+`expectsDatabaseQueryCount(n)` with 1 vs many records: the count must not grow with rows. Call `$this->app->forgetScopedInstances()` before a measured request (scoped instances survive between requests in one test). Locally: `DB::listen` or Debugbar.

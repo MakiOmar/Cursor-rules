@@ -1,0 +1,19 @@
+---
+description: Public-site icons are self-hosted, sanitized inline SVG — no third-party icon scripts, fonts, or CDNs
+globs: **/components/**/*Icon*
+alwaysApply: false
+---
+
+# Icons: self-hosted SVG only
+
+The public site makes no third-party requests for icons.
+
+- Render icons through one shared SVG icon component from the stored icon value.
+- Icon sets are dev dependencies served from your own origin and loaded only in admin pickers; never import whole icon-set JSON into public components.
+- Uploaded icons are SVG-only and run through the same allowlist sanitizer on save (`laravel/uploads.mdc`); keep frontend and backend allowlists in sync.
+- Never inject icon markup that skipped the allowlist.
+
+## Don't
+
+- Use icon web components that call a remote API, Font Awesome kits/CDN CSS, or icon web fonts on public pages.
+- Import npm icon component packages into shared public components.

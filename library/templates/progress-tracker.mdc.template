@@ -1,0 +1,38 @@
+---
+description: Keep {{TRACKER_PATH}} accurate; read it before planning {{AREA}} work
+globs: {{AREA_GLOBS}}
+alwaysApply: false
+---
+
+<!--
+Template: copy to .cursor/rules/project/{{area}}-progress.mdc and replace every {{...}} placeholder.
+Example values: TRACKER_PATH = docs/public-site/STOREFRONT_PROGRESS.md, AREA = storefront,
+AREA_GLOBS = **/storefront-qwik/**,**/app/Http/Controllers/Api/Storefront/**
+Delete this comment after filling it in.
+-->
+
+# {{AREA}} progress tracker
+
+Canonical file: `{{TRACKER_PATH}}` (what is implemented). Requirements: `{{SPEC_PATH}}` (what should exist). API contract: `{{API_DOC_PATH}}`.
+
+## Read it
+
+At the start of any task touching {{AREA}}: skim **Summary**, **Recommended next**, and the section for your task, so you don't re-plan finished work or miss dependencies.
+
+## Update it in the same change when you
+
+- Ship a new route, API endpoint, admin setting, or user-facing flow.
+- Move an item between done / partial (including regressions).
+- Add meaningful tests for a previously untested area.
+
+Skip typo fixes, behavior-neutral refactors, and unfinished work unless asked.
+
+## How
+
+1. Set **Last updated** to today (ISO date).
+2. Status cells: ✅ Done · 🟡 Partial · ⬜ Not started.
+3. Add notes or key paths for new rows.
+4. Append one line to **Changelog**.
+5. Refresh **Recommended next** only when priorities shift.
+
+Keep entries factual and brief; link to the spec instead of copying it.

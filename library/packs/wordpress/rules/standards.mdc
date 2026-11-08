@@ -1,0 +1,18 @@
+---
+description: WordPress — hooks over core edits, sanitize/escape, nonces with capabilities, prepared queries
+globs: **/*.php
+alwaysApply: false
+---
+
+# WordPress standards
+
+- Never edit core or third-party plugins/themes; extend through hooks, filters, a child theme, or a custom plugin.
+- Prefix every function, hook, option, and post type (`myplugin_`), or namespace classes.
+- Input: `wp_unslash()` then the matching sanitizer (`sanitize_text_field`, `sanitize_email`, `absint`, `wp_kses_post`).
+- Output: escape late with `esc_html`, `esc_attr`, `esc_url`, or `wp_kses_post`.
+- State-changing requests check a nonce (`check_admin_referer`, `check_ajax_referer`) **and** `current_user_can()`.
+- Database: WP APIs first (`WP_Query`, options, meta); any variable in custom SQL goes through `$wpdb->prepare()`.
+- REST routes always set `permission_callback` (`__return_true` only for genuinely public data) and validate/sanitize `args`.
+- Assets via `wp_enqueue_script` / `wp_enqueue_style` with a version; no inline `<script>` in templates.
+- User-facing strings use the plugin's text domain (`__()`, `esc_html__()`).
+- Follow WordPress Coding Standards (PHPCS `WordPress` ruleset) when the project has it configured.

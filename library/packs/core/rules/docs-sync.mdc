@@ -1,0 +1,21 @@
+---
+description: Update docs in the same change when env keys, config, APIs, or operator-visible behavior change
+alwaysApply: false
+---
+
+# Docs stay in sync with config and behavior
+
+When a change adds, removes, or materially alters configuration, APIs, admin/public behavior, or deploy/ops concerns, update the docs in the same change.
+
+| Change | Update |
+|--------|--------|
+| New or changed env key | `.env.example` (with a comment) and the project's configuration doc |
+| New `config/*.php` entry driven by env | Same as above; operators must not depend on code comments |
+| New feature flag | Configuration doc (see `laravel/feature-flags.mdc` when installed) |
+| New API route or changed response shape | The project's API reference |
+| Security, CORS, rate limit, or cache behavior | Configuration or security doc when operators can tune it |
+| Non-obvious architecture decision | Short ADR under `docs/`, linked from the configuration doc |
+
+- Keep one canonical explanation per topic; link to it instead of copying tables.
+- Code-only changes with no operator-visible effect need no doc update.
+- If the project has no configuration doc yet, ask once where it should live (default `docs/CONFIGURATION.md`).

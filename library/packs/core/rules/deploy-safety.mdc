@@ -1,0 +1,23 @@
+---
+description: Deploying or releasing to staging/production — git-only, backup first, stop on failure
+alwaysApply: false
+---
+
+# Deploy safety
+
+Code reaches servers only through git. The step-by-step runbook is the project's `deploy` skill (the `laravel` pack ships one); hosts and paths live in the project's copy of that skill, never in rules.
+
+## Must
+
+- **Flow:** edit locally → test and build locally → commit → push → on the server `git pull`, install, build, migrate.
+- **Never edit code on a server** (SSH editors, SFTP/FTP uploads, `sed` on live files) and never upload locally built bundles. Urgent hotfixes take the same path.
+- **Allowed on the server:** `.env` values, data operations (imports, artisan commands), and infra files copied from a committed version.
+- **Back up first:** dump the database (and uploaded files when they will be replaced) before any migrate, import, or data sync. Never `migrate:fresh` or import over live data without that backup.
+- **Stop on failure:** run steps in order and report at the first failure; the previous build keeps serving.
+- **Gate the build:** type-check/build must pass before the new build replaces the old one.
+- **Smoke test:** API health endpoint, home page, admin login, one form.
+
+## Never
+
+- Commit or leave behind dumps, `.env` files, or temporary credential files on the server.
+- Pass a password on the command line (e.g. `plink -pw`); use an SSH key or agent.

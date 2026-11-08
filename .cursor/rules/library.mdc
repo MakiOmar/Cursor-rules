@@ -1,0 +1,40 @@
+---
+description: Maintaining the rules library — layout, sync points, validation, authoring constraints
+alwaysApply: true
+---
+
+# Rules library (this workspace)
+
+This workspace is the source of truth for the Cursor rules and skills we install into projects. `cursorrules1/` and `cursorrules2/` are the archived originals: read them, never edit them.
+
+## Layout
+
+| Path | Purpose |
+|------|---------|
+| `library/packs/<pack>/rules/*.mdc` | Installed to `.cursor/rules/<pack>/` |
+| `library/packs/<pack>/skills/<name>/SKILL.md` | Installed to `.cursor/skills/<name>/` |
+| `library/templates/*.mdc.template` | Per-project rules, copied by hand |
+| `library/global-user-rule.md` | The User Rule pasted into Cursor Settings |
+| `library/install.ps1` | Installer; discovers packs from the folders |
+| `library/validate.ps1` | Checks everything listed below |
+
+## Every change
+
+1. Add, change, move, or remove rules, skills, and packs with the `library-authoring` skill.
+2. Update the sync points the installer can't discover:
+   - router pack table and `Skills` line in `library/packs/core/rules/00-router.mdc`;
+   - README pack table, the router size and agent-requested count in its token section, and the "where each original rule went" table when an original's content moves;
+   - `install.ps1` `.EXAMPLE` lines when a pack is added, renamed, or removed; installer code only when install behavior changes (a new file kind or destination);
+   - the mapping table in `global-user-rule.md` when content moves between the User Rule and packs.
+3. Run `.\library\validate.ps1`. The task is done only when it prints `Library is valid.`; quote its summary line in the report.
+
+## Authoring constraints
+
+- One concern per file, body under ~50 lines. Extend the closest existing rule instead of adding a near-duplicate.
+- `core` holds only what every project needs; framework or area specifics go in their pack. Never restate the global User Rule.
+- Frontmatter on line 1 with a `description` (under ~100 characters, no `: `). `alwaysApply: false` everywhere except the router.
+- Prefer `globs`. A description-only rule costs its description in every chat of every project with that pack; use it only when no file pattern fits.
+- Globs: one unquoted comma-separated line, each starting with `**/`; no spaces, `[...]` (a character class, so `[lang]` never matches), or braces.
+- Cross-reference as `pack/name.mdc`. No hosts, IPs, credentials, or one-project paths: those go in templates or a project's copy of a skill.
+- Skill names are unique across packs (they share `.cursor/skills/`) and match their folder.
+- Installed projects keep renamed or removed rules until deleted; re-running `install.ps1` warns about them. Say so in the report.

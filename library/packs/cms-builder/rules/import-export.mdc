@@ -1,0 +1,29 @@
+---
+description: Every visual builder ships JSON import/export through the shared helper and envelope
+globs: **/src/components/admin/**/*Builder*.tsx,**/src/lib/admin/builder-import-export.ts
+alwaysApply: false
+---
+
+# Builders: JSON import / export
+
+Every visual builder (page, form, homepage, header/footer, theme documents, future kinds) exposes JSON file import and export through the shared stack — never a one-off per screen.
+
+## Envelope
+
+- `format`: the product's builder-export format id (e.g. `credocode.builder-export`)
+- `version`: integer
+- `builder`: stable kind (`page` | `form` | `homepage` | `header` | `footer` | `body` | `single` | `archive` | `loop_item` | `overlay` | `theme`)
+- `exported_at`: ISO timestamp
+- `document`: the builder payload only — no entity metadata (title/slug/status) unless the document already embeds it
+
+## Behavior
+
+1. **Export** downloads the current in-editor document as the envelope.
+2. **Import** confirms overwrite, then replaces **editor state only**; the operator clicks Save to persist (no auto-PUT).
+3. Reject mismatched `builder` kinds; normalize with the existing helpers. Accept a raw document without envelope when the shape is unambiguous.
+
+## Adding a builder
+
+Add the kind and its normalize branch, mount the shared import/export buttons next to Save, and pass `getDocument$` / `applyDocument$` bound to the workspace signals.
+
+Content-entity CSV/JSON import is a different concern; don't reuse it for layouts. Theme Builder listings also import/export whole layouts (name, slug, status, document; upsert by slug), with per-row export in the row-actions menu.

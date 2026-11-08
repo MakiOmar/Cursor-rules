@@ -1,0 +1,24 @@
+---
+description: Builder light/dark colour overrides — scoped selector, colour-only dark bags, no Tailwind dark variants
+globs: **/src/lib/marketing/builder-*.ts,**/src/lib/theme/**,**/src/components/marketing/widgets/**,**/src/components/marketing/layout/**,**/src/components/admin/BuilderStylePanel.tsx,**/src/components/admin/BuilderBackground*.tsx,**/src/components/admin/ColorPickerField.tsx,**/app/Services/Appearance/Builder*Document.php
+alwaysApply: false
+---
+
+# Builder dark mode
+
+Light/dark is a **colour-only** dimension next to the device breakpoints.
+
+## Must
+
+- **Scope selector:** dark CSS uses `:where(.dark, .dark *):not(:where(.dark .light, .dark .light *))`. In TS use the shared `DARK_SCOPE_SELECTOR` / `isDarkScope()`; never plain `.dark .x`.
+- **Dark bags hold colours only:** `styles.dark` accepts colour/shadow keys; `settings.background.dark` only the per-type colour/image keys. One bag for all breakpoints.
+- **New colour key:** add it to the Style controls, the backend colour-key list, **and** the frontend base colour keys so it gets a dark override.
+- **Widget defaults:** a Style-tab colour reads `var(--s-<key>, var(--xx-d-*))` with light/dark defaults in the widget CSS. Don't hard-code Tailwind `dark:text-*` / `dark:bg-*` for those colours — they beat the Style value.
+- **Values:** hex, `rgb()/rgba()`, `var(--kit-color-[a-z0-9_-]{1,40})`, or `theme` (dark only). Validate on the backend **and** with the shared safe-colour check before writing any `<style>` text.
+- **Kit colours:** pickers for Style/background colour keys allow global kit colours; hex-only fields (widget settings, particles/rain, shape dividers, the design kit itself) don't.
+
+## Don't
+
+- Add per-breakpoint dark values or dark sizes/spacing.
+- Store theme toggles in settings — the canvas theme is editor state only.
+- Inject unvalidated colour strings into CSS.

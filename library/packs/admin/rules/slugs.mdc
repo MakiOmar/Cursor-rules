@@ -1,0 +1,20 @@
+---
+description: Admin content slugs — auto-generate unique slugs from titles, WordPress-style suffixes
+globs: **/lib/slug/**,**/app/**/*Slug*.php
+alwaysApply: false
+---
+
+# Content slugs (WordPress-style)
+
+Create and edit screens for slugged content:
+
+1. **Title blur:** ask the server for a slug (`Str::slug` equivalent) and fill the slug field — unless the operator already typed in the slug (lock auto-fill after the first manual slug input).
+2. **Slug blur:** re-check uniqueness and append numeric suffixes: `base`, `base-2`, `base-3`, …
+3. Manual edits are always allowed; a manually locked slug is never overwritten by a title blur until the form resets for a new record.
+4. Edit screens pass `ignore_id` (current record) so the existing slug stays valid.
+
+## Implementation
+
+- One backend suggest endpoint (e.g. `POST /<version>/content-slugs/suggest` with `entity`, `source`, optional `ignore_id`) backed by a single uniqueness helper; authorize with the target model's policy.
+- Enforce uniqueness on the table's `slug` column (per locale where applicable) before adding a new entity to the endpoint.
+- **Qwik:** pass the current record id as a `Signal<number | null>`, not a `() => number` callback — plain functions aren't serializable across `$()` boundaries.

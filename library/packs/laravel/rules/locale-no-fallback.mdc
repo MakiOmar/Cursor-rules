@@ -1,0 +1,21 @@
+---
+description: Multilingual listings with a selected locale must not fall back to primary-language content
+alwaysApply: false
+---
+
+# Multilingual listings: no fallback
+
+When a listing is requested with a presentation locale (e.g. an `X-Content-Locale` header or `?locale=`):
+
+- Return only records that have content in that locale; never fall back to primary-language fields when the translation is missing.
+- Default locale: records whose `content_locale` is the default (or `null` when null means default) count as having content.
+- Other locales: include a record only when a matching translation row exists.
+- Applies to public listings **and** authenticated admin `index()` lists of translatable content. Single-record admin fetches (show/edit) may return raw fields plus `translations`.
+- Doesn't apply to navigation/menu resolution.
+
+## Implementation
+
+- Filter at query level: `content_locale` match `orWhereHas('translations', locale)`.
+- Then apply the presenter overlay that replaces fields with the localized values.
+- For strict checks, use a `has*ContentForLocale()` helper before serializing each item.
+- SEO rows and default descriptions follow the same no-fallback rule.

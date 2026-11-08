@@ -1,0 +1,27 @@
+---
+description: Enable/disable whole modules via config/features.php and FEATURE_* env keys, never via settings
+globs: **/config/features.php
+alwaysApply: false
+---
+
+# Feature modules (env / config toggles)
+
+Turn whole capabilities on or off with `config/features.php` plus `FEATURE_*` env keys, with per-fork fallbacks under `defaults.*`. Application code reads flags via `config('features.…')`.
+
+## Must
+
+- **Precedence:** explicit env value when set and parseable, otherwise `defaults.<key>`. Parse string env values as tri-state booleans (true / false / unset).
+- **Modules are not settings.** Never persist toggles in DB or JSON settings, never add admin UI or settings-API fields to flip them, never merge operator input into `features`. Settings are for branding, locales, and similar content.
+- **Expose read-only:** merge effective booleans into the public settings response (e.g. `GET /api/settings` → `features.{key}`).
+- **Gate consistently when off:** routes or controller early-return / middleware / policy (same API error shape as elsewhere), hidden navigation, skipped seeders, and the frontend never calls disabled endpoints.
+- **Frontend source of truth:** read `features` from the settings API. Use a build-time `VITE_*` flag only when the client must know before settings load, and document which one wins.
+- **Naming:** one env var per flag, `FEATURE_<NAME>`; the config key matches the `features` object key.
+- Many flags share one resolver; do not copy a private method per flag.
+- New flag: `.env.example`, configuration doc, and a feature test for on and off (`core/docs-sync.mdc`).
+- Enabled **languages** are settings content, not a module: multilingual support is always on, and a single-language site simply has one enabled locale.
+
+## What counts as a module
+
+A cohesive capability you would hide routes/nav for, skip seeding for, or return 404/403 for when disabled: a content type (blog, portfolio, services, testimonials, careers, FAQs), a dashboard or public section, an API route group, or a third-party integration (payments, CRM, newsletter). Not every model or helper.
+
+Addon-based projects: addon modules default off and are enabled through a config/env list — see `cms-builder/addon-host.mdc`.

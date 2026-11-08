@@ -1,0 +1,41 @@
+---
+description: Laravel 11/12 middleware in bootstrap/app.php — keep framework defaults, API bindings/throttle, locale order
+globs: **/bootstrap/app.php,**/app/Http/Middleware/**
+alwaysApply: false
+---
+
+# Laravel 11/12 middleware (`bootstrap/app.php`)
+
+In Laravel 11+, `bootstrap/app.php` can silently replace framework defaults. If you touch it, you own restoring them.
+
+## Must
+
+- **Never `$middleware->use([...])`.** It replaces the global defaults (`TrustProxies`, `InvokeDeferredCallbacks` — needed by `Cache::flexible`/`defer()`, `PreventRequestsDuringMaintenance`, `ValidatePostSize`, `TrimStrings`, `ConvertEmptyStringsToNull`, `ValidatePathEncoding`). Use `append()` / `prepend()`; remove a default only with `remove()` and a stated reason.
+- **Never redefine `web` or `api` with `group()`.** It drops sessions, CSRF, and `SubstituteBindings`. Use `appendToGroup()` / `prependToGroup()`.
+- **API group keeps `SubstituteBindings` and throttling** (`$middleware->throttleApi()`). Without bindings, injected models have `exists = false`, `id = null`, and `authorize()` fails.
+- **Locale before bindings:** middleware that calls `URL::defaults()` runs before `SubstituteBindings`.
+- **One auth mode:** classic Sanctum SPA (session cookie + CSRF) uses `$middleware->statefulApi()`. Cookie→Bearer promotion or pure tokens must not add `EnsureFrontendRequestsAreStateful` (see `qwik/auth-sanctum.mdc`).
+- Authenticated APIs sit under a versioned prefix behind `auth:sanctum`. Public read endpoints are meant to be public (`laravel/public-endpoints.mdc`) — don't "fix" them by adding auth.
+- Frontend endpoint paths match backend routes exactly.
+
+```php
+->withMiddleware(function (Middleware $middleware): void {
+    $middleware->append([SetSecurityHeaders::class]);
+    $middleware->appendToGroup('api', [SetLocaleFromRequest::class]);
+    $middleware->throttleApi();
+    $middleware->prependToPriorityList(
+        before: SubstituteBindings::class,
+        prepend: SetLocaleFromRequest::class,
+    );
+})
+```
+
+## Debugging
+
+| Symptom | Cause |
+|---------|-------|
+| `$model->id === null`, `exists = false` | `SubstituteBindings` missing from the route's stack |
+| `authorize()` fails | Route not under `auth:sanctum` |
+| Real client IPs / rate limits wrong, `Cache::flexible` never refreshes | Global defaults dropped by `use()` |
+
+Check with `Log::info(request()->route()->gatherMiddleware())`. Fix the stack; never hide it with a `findOrFail` fallback in controllers.

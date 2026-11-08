@@ -1,0 +1,21 @@
+---
+description: Use the shared {{COMPONENT}} for every {{PURPOSE}} control
+globs: {{FRONTEND_GLOBS}}
+alwaysApply: false
+---
+
+<!--
+Template: pins one shared UI component so agents stop re-implementing it.
+Example: COMPONENT = QuantityStepper, IMPORT_PATH = ~/components/ui/quantity-stepper,
+PURPOSE = product/cart quantity, REPLACES = a bare <input type="number">.
+Delete this comment after filling it in.
+-->
+
+# Shared {{COMPONENT}}
+
+Never use {{REPLACES}} for {{PURPOSE}}. Import `{{COMPONENT}}` from `{{IMPORT_PATH}}`; never duplicate its markup or styles on another route.
+
+- **Bounds/props:** {{REQUIRED_PROPS}} (e.g. `min` default 1, `max` when the stock cap is known).
+- **Accessibility:** the component exposes `role="group"`, an `aria-label` naming the item, and labelled buttons.
+- **Events (Qwik):** type the callback prop as `QRL<(value: number) => void>`; call sites pass inline `onChange$` handlers.
+- Styles live in one place ({{STYLE_LOCATION}}).

@@ -1,0 +1,25 @@
+---
+description: Content types and builder dynamic tags — allowlisted, registered only through ContentTypeRegistry definitions
+globs: **/app/Services/ContentTypes/**,**/config/content-types.php,**/src/lib/admin/*dynamic-tag*.ts,**/src/lib/admin/content-types.ts
+alwaysApply: false
+---
+
+# Content types and dynamic tags: one registry
+
+Every routable content type is a definition class listed in `config/content-types.php` and read through the `ContentTypeRegistry` singleton. Theme singles/archives, loop items, and CMS pages resolve **allowlisted** `{{tag.id}}` tokens server-side, locale-aware; unknown tags become empty strings.
+
+## Must
+
+- Editor menus insert only ids from the registries API (`dynamic_tags`); never resolve raw queries or unlisted keys.
+- **New content type:** extend the base content type, add it to `config/content-types.php`, set `module()` to its feature key, and add type + tag-group labels in every UI language.
+- **New tag:** add it to the owning definition (`fields()` for the record, `relations()` for related records). Shared `post.*` tags keep working for every type.
+- Ids follow `{type}.{field}` and `{type}.{relation}.{first|count}…`.
+- Relation values are translated and filtered (e.g. approved only) and eager-loaded through the definition.
+- Anything that needs "the list of types" (theme conditions, path resolution, loop sources, preview picker, admin dropdowns) reads the registry (backend) or `content_types` from the registries API (website).
+- Dynamic list and gallery sources come only from the registry's source-option helpers; never hand-list sources.
+
+## Don't
+
+- Hard-code type lists, `instanceof` chains, or per-type `match` blocks outside the definitions.
+- Expose private columns (emails, tokens, internal notes) as tags.
+- Persist a type's module on/off in settings.

@@ -1,0 +1,45 @@
+---
+description: Page builder Style tab — widget style groups, container chrome, layout backgrounds (color/gradient/image/animated)
+globs: **/src/lib/marketing/builder-styles.ts,**/src/lib/marketing/builder-background.ts,**/src/lib/admin/builder-style-controls.ts,**/src/components/admin/BuilderStylePanel.tsx,**/src/components/admin/BuilderBackgroundFields.tsx,**/src/components/admin/pages/PageBuilderWorkspace.tsx,**/src/components/marketing/layout/**
+alwaysApply: false
+---
+
+# Page builder: Style tab and backgrounds
+
+## Widgets and kits
+
+- Register the block `type` in the widget style-group map with at least `layout` and `spacing` (or the full set it needs); every registered group has controls.
+- Styled blocks render through the shared styled-leaf wrapper and widget style CSS.
+- No insertable block has an empty Style tab. Style colours honour light/dark (`cms-builder/dark-mode.mdc`).
+
+## Containers (band / row / column)
+
+Each exposes:
+1. **Background** — `settings.background` via the shared background fields.
+2. **Container chrome** — `styles` via the style panel with the container style type (layout + spacing + border + custom).
+3. **Public render** — the layout node shell applies both the background layer and the styled CSS vars.
+
+## Backgrounds
+
+| Type | Use |
+|------|-----|
+| `none` | Default |
+| `color` | Solid fill |
+| `gradient` | Linear (from / to / angle) |
+| `image` | Media-library image + size, optional colour overlay (opacity 0–100), lazy by default |
+| `particles` / `animated_rain` | Canvas animations |
+
+- Choosing colour or gradient writes default values immediately so the preview updates.
+- **Images always come from the media library**, never a pasted URL — in every builder field.
+- Optional `background.dark` holds dark overrides; the type is shared.
+- Embedded kits must not paint opaque section fills that hide parent backgrounds.
+- Honour `prefers-reduced-motion: reduce` (animations static or off).
+- New animated presets are new `background.type` values with an admin option and a public layer component — no one-off CSS on bands.
+- Shape dividers use preset SVGs only; never accept operator-uploaded SVG markup there.
+
+## Checklist
+
+- [ ] Widget: style groups + Style tab + public wrapper
+- [ ] Container: background + container style panel + shell `styles`
+- [ ] Preview matches the public page
+- [ ] Grid kits follow `cms-builder/grid-columns.mdc`

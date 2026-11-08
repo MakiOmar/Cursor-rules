@@ -1,0 +1,39 @@
+---
+description: Unauthenticated public API endpoints — input normalization, published-only data, Cache-Control/CDN
+globs: **/app/Http/Controllers/**/Public*.php,**/app/Services/**/Public*.php,**/app/Http/Resources/**/Public*.php,**/config/http-cache.php
+alwaysApply: false
+---
+
+# Public API endpoints and HTTP caching
+
+Bots and scanners call these at full rate. Design every action for a warm-cache fast path and a cheap miss.
+
+## Inputs
+
+- Route slugs: lowercase with a length cap (`->where('slug', '[a-z0-9][a-z0-9-]{0,190}')`) and `strtolower($slug)` before the cache key and query.
+- Paging and filters: validate (`integer|min:1|max:N`) before they reach a key or query.
+- Locale: only from the allowlisted presentation-locale resolver, and it must match what the URL carries.
+
+## Data exposure
+
+- **Published only, everywhere in the payload:** the record and its parents/ancestors, relations, dynamic-tag values, hierarchy graphs used to build paths, and loop/list items. A query feeding public output without a published scope is a leak.
+- Select the columns you serialize; never return internal ids or flags the site doesn't use.
+- Pass the presentation locale to every presenter; no fallback to another language (`laravel/locale-no-fallback.mdc`).
+
+## Queries and misses
+
+- Zero business-data queries on a warm cache hit; lists paginated or capped; eager-load what presenters read (`laravel/query-performance.mdc`).
+- Missing or untranslated record: cached sentinel, then `abort(404)` with the standard 404 shape (`laravel/caching.mdc`).
+- Gate with the module's feature flag so disabled modules cost nothing (`laravel/feature-flags.mdc`).
+
+## HTTP caching / CDN
+
+- Public `Cache-Control` (`public, s-maxage, stale-while-revalidate`) only on `200`. 404/429/5xx get `no-store` or a short `max-age` — check `$response->getStatusCode()` in the middleware.
+- Everything the body varies on is in the URL (e.g. `?locale=`). Many CDNs key on the URL only and ignore `Vary`; keep `Vary` for caches that honor it but never rely on it. If a header and the URL disagree on locale, respond `private`.
+- Bypass the shared cache only when a user actually resolves, and only for endpoints whose body never depends on the user; a bare anonymous `Authorization` header must not force origin.
+- Keep `stale-while-revalidate` short for content that can be unpublished; document the value.
+- Admin and authenticated routes stay `private, no-store`. One policy in middleware; no per-controller `Cache-Control` overrides.
+
+## Verify
+
+Feature test per action: warm-hit query count; case-variant slug resolves to one cache entry; draft parent/relation absent from JSON; unknown slug twice runs one lookup; missing record has no `public` header; mismatched locale header/query gives `private`.

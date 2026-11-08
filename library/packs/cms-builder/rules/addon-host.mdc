@@ -1,0 +1,25 @@
+---
+description: Addon host — product features ship as Composer + npm addon packages; the base stays product-neutral
+globs: **/app/Addons/**,**/src/lib/addons/**
+alwaysApply: false
+---
+
+# Addon host
+
+The base is product-neutral. Product features (shop, booking, …) are **addons** in their own repos: a Composer package (backend) plus an npm package (website). Base fixes go to the base repos.
+
+## Must
+
+- **Never name a product in the base.** Extend only through the hooks: the addon service provider (module key, content types, widgets, kits, admin nav, API routes, migrations, `bootEnabled`) and the npm addon manifest (`widgets` / `kits`, admin screens).
+- **Module gating:** addon keys default off and are enabled with a config/env list (e.g. `FEATURE_ADDONS`); an explicit `features.modules.<key>` wins. Everything an addon registers disappears when its module is off (`laravel/feature-flags.mdc`).
+- **Keep data when off:** builder blocks of a disabled addon survive save and are hidden on public output.
+- **Fail loudly on collisions:** duplicate module keys, widget/kit types, content-type keys, or public prefixes throw. New base public routes reserve their first path segment in the content-type registry.
+- **Public pages stay Theme Builder documents.** Addon records render through the generic content route + public content API; no product-specific marketing routes in the base. Single-page SEO comes from the content type's `seo()` hook (data only; the website escapes JSON-LD).
+- **Lazy website code:** addon entries are `component$` exports from virtual modules; never import addon packages directly in shared components or add them to `manualChunks`.
+- **Host helpers:** addons import base code only through the host helper package (one export group per file), never `~/…` paths.
+- Admin screens mount under `/{lang}/admin/addons/{module}/…` and inherit the admin layout's noindex.
+- Addons follow every base rule and ship their own strings for every UI language.
+
+## Verify
+
+Run the backend addon-host test and the website addon tests after touching the host; base tests must pass with addons installed.

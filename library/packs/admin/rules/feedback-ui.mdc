@@ -1,0 +1,14 @@
+---
+description: Admin feedback — confirm dialogs, toasts, loading/error/empty states, mobile-first layout
+globs: **/routes/**/admin/**,**/pages/admin/**,**/components/admin/**
+alwaysApply: false
+---
+
+# Admin feedback and states
+
+- Destructive or irreversible actions confirm through the shared ConfirmDialog component (SweetAlert2 in new projects; reuse the existing dialog in older ones). Never `window.confirm`.
+- Async results show a toast (success or error). Validation errors also appear inline next to their field.
+- Every async view handles three states: loading (skeletons for lists and cards, a busy/disabled state on buttons), error with a retry, and an empty state that offers the primary action ("No posts yet — Create post").
+- Disable submit while a request runs; no double submits.
+- Mobile-first: wide tables scroll inside their container or collapse to cards; touch targets at least 40px; check at 360px width.
+- Dialog and toast text comes from the UI language files.

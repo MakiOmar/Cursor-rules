@@ -1,0 +1,16 @@
+---
+description: WordPress-style static homepage — builder homepage or a CMS page assigned to /
+globs: **/app/Support/StaticHomepage.php,**/src/lib/marketing/static-homepage.ts
+alwaysApply: false
+---
+
+# Static homepage (WordPress "Reading" setting)
+
+Operators show either the builder homepage or a published CMS page at `/`.
+
+- **Storage** in project settings (it's content, not a feature flag): `show_on_front` = `builder` (default) | `page`, and `page_on_front` = page id or null. Public site meta exposes `front_page_slug`.
+- `builder`: `/` uses the matched theme body, else the homepage builder.
+- `page`: `/` renders that page's sections; the page's own URL 301s to home.
+- Unpublished or missing page, or pages module off → fall back to builder.
+- Resolve the front page once per request (`laravel/query-performance.mdc`) and clear it when a page is saved or deleted.
+- Admin: Settings → General, "Your homepage displays".

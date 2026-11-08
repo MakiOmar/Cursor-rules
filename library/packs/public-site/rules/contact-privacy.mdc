@@ -1,0 +1,13 @@
+---
+description: Public pages never expose customer PII; business contact emails via contact form, not raw markup
+alwaysApply: false
+---
+
+# Contact details and PII on public pages
+
+Public pages are server-rendered and crawlable; anything in the HTML or SSR payload gets scraped.
+
+- **Customer PII** (emails, names, phones, addresses) appears only behind authentication (the account area), never on public pages, JSON-LD, meta tags, or `data-*` attributes.
+- **Business contact:** prefer a contact form that POSTs to the backend over publishing an address.
+- If an address must be shown, keep it out of SSR HTML, the SSR data payload, JSON-LD, meta, and `data-*`; assemble it client-side after load. This only reduces spam — base64 or similar encoding is not protection, and the raw value must never be sent alongside the encoded one.
+- An `Organization` JSON-LD `email` is a deliberate trade-off; omit it unless the client wants the address public.

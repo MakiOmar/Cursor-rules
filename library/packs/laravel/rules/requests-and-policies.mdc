@@ -1,0 +1,23 @@
+---
+description: Thin controllers, Form Requests, and policies — matching abilities, separate destructive permissions
+globs: **/app/Http/Requests/**,**/app/Http/Controllers/**,**/app/Policies/**
+alwaysApply: false
+---
+
+# Form Requests and policies
+
+Controllers stay thin: validation in Form Requests, authorization in policies, business logic in services or actions, data access through Eloquent relationships rather than manual joins.
+
+## Form Requests
+
+- New `store`, `update`, and `upload` actions use a class in `app/Http/Requests/`. Small index filters and bulk-id lists may keep an inline `validate()`.
+- Normalize input (camelCase aliases, slug uniquifying) in `prepareForValidation()`.
+- `authorize()` uses the same policy ability as the controller (`create`, `update`, `upload`).
+- Sanitize HTML and persist in the controller or a service, after `$request->validated()`.
+
+## Policies
+
+- `view` / `create` / `update` may share one manage permission.
+- `delete`, `bulkDelete`, `restore`, and system tools need their own permission or a narrower role — never `return $this->viewAny($user)`.
+- Register via auto-discovery (`app/Policies/{Model}Policy.php`) or `Gate::policy()` in `AppServiceProvider::boot()`; Laravel 11+ has no `$policies` property there.
+- Tightening existing delete rights is a product decision; don't change old policies unless asked.

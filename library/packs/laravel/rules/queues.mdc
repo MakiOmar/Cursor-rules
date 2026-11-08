@@ -1,0 +1,18 @@
+---
+description: Queue image processing, mail, and other heavy work off the HTTP request
+globs: **/app/Jobs/**,**/app/Notifications/**,**/app/Mail/**
+alwaysApply: false
+---
+
+# Queue heavy work
+
+HTTP handlers persist and return. CPU- or I/O-heavy follow-up runs in a Job or a `ShouldQueue` notification/mailable.
+
+- Image encoding and thumbnails: dispatch a job after the record is saved; make queuing toggleable via config (e.g. `media.queue_image_processing`).
+- Mail and notifications that hit the network implement `ShouldQueue`.
+- `QUEUE_CONNECTION=database` (or redis) in production requires a running `php artisan queue:work`; tests use `sync`, so they still finish inline.
+
+## Avoid
+
+- Image encoding, backups, or bulk-import loops inside a controller after saving.
+- Dispatching jobs from constructors, or from the method the job itself calls (recursion).

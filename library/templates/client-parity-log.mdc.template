@@ -1,0 +1,36 @@
+---
+description: Log {{SOURCE_CLIENT}} behavior not yet ported to {{TARGET_CLIENT}} as a build-ready backlog entry
+globs: {{SHARED_GLOBS}}
+alwaysApply: false
+---
+
+<!--
+Template: for projects where two clients share one API (e.g. web storefront + mobile app).
+Copy to .cursor/rules/project/client-parity-log.mdc and replace every {{...}} placeholder.
+Example: SOURCE_CLIENT = storefront-qwik, TARGET_CLIENT = storefront-mobile,
+BACKLOG_PATH = docs/public-site/MOBILE_PORT_BACKLOG.md, SCREEN_MAP = docs/public-site/MOBILE.md
+Delete this comment after filling it in.
+-->
+
+# {{SOURCE_CLIENT}} → {{TARGET_CLIENT}} parity log
+
+Both clients share `{{SHARED_API_PREFIX}}`. When {{SOURCE_CLIENT}} or that API changes and this task doesn't update {{TARGET_CLIENT}}, append one entry to `{{BACKLOG_PATH}}` before finishing.
+
+Skip it when {{TARGET_CLIENT}} is updated in the same task, for refactors or visual-only tweaks, and for changes with no {{TARGET_CLIENT}} surface (SSR, sitemap, web-only SEO).
+
+On {{TARGET_CLIENT}} work: read pending entries and build from the entry alone; when it ships, set **Status** to `done` and add the paths.
+
+## Entry (self-contained; write only the delta)
+
+```markdown
+## YYYY-MM-DD — Title
+- Status: pending
+- Behavior: what the user does and sees (guest vs signed-in, feature flag, empty, loading, error)
+- {{SOURCE_CLIENT}}: paths and symbols that implement it
+- API: method, path, request fields, response fields the UI reads
+- Client state: storage keys, headers
+- Copy: new i18n keys with strings for every language
+- {{TARGET_CLIENT}}: route and component to add or edit (see {{SCREEN_MAP}})
+- Build: ordered file-level steps
+- Done when: checks that prove parity
+```

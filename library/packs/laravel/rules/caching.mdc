@@ -1,0 +1,40 @@
+---
+description: Laravel Cache::remember/flexible/lock usage — keys, null results, stampedes, version bumps, invalidation
+alwaysApply: false
+---
+
+# Laravel caching
+
+Check `CACHE_STORE` first: on the `database` store every cache read and write is a query, so treat cache calls as I/O. These rules apply on any store.
+
+## Must
+
+- **Never return `null` from a `remember` / `flexible` callback.** Laravel reads it back as a miss, so the callback re-runs on every request (404 floods hit the DB). Cache a sentinel with a short TTL:
+  ```php
+  $hit = Cache::remember($key, 300, fn () => $this->build($slug) ?? ['__missing' => true]);
+  abort_if(isset($hit['__missing']), 404);
+  ```
+- **Bounded keys:** only normalized, allowlisted values (lowercased slug, validated page/per_page with a max, allowlisted locale). Never hash raw request input.
+- **Key shape:** `{resource}:{scope}:v{N}` with `:` separators (`categories:list:v1`, `category:{id}:v1`, locks `lock:{key}`). Bump `vN` when the payload shape changes.
+- **One key builder per payload.** Readers and `Cache::forget` call the same method; never retype key strings.
+- **Version counters bump atomically, once:** seed with `Cache::add`, then `Cache::increment`; never `get` + `forever($v + 1)`. Bump in one place (model event *or* service).
+- **Bump only on publicly visible change** (skip draft → draft: `wasChanged('status')`, `getOriginal('status')`).
+- **Declare dependencies:** a payload embedding other records (media URLs, translations, SEO, settings, global widgets) is invalidated by *their* save/delete too.
+- **Stampede protection** for expensive payloads: `Cache::flexible($key, [$fresh, $stale], fn)` (needs `InvokeDeferredCallbacks`, see `laravel/middleware.mdc`), or lock on miss only, with `remember` re-checking inside the lock:
+  ```php
+  $value = Cache::get($key) ?? Cache::lock("lock:$key", 10)
+      ->block(5, fn () => Cache::remember($key, $ttl, fn () => $this->build()));
+  ```
+- **Cache plain arrays**, not models, collections, or paginators.
+- **Intentional TTLs** when nothing invalidates the key: hot lists 5–15 min, admin data 15–60 min, heavy aggregates 1–6 h, reference data 6–24 h. `forever` only for version counters or explicitly invalidated data.
+
+## Avoid
+
+- `Cache::has()` then `Cache::get()` — two reads, and the key can expire in between.
+- Building keys from settings loaded from the DB on every request (`laravel/query-performance.mdc`).
+- Applying locale overlays or filters *after* reading cached models (the work repeats per hit).
+- `redis-cli KEYS` in production (blocks Redis). Use `redis-cli -n <cache-db> --scan --pattern '*<prefix>*<key>*'`; the DB is `config('database.redis.cache.database')`, the prefix `config('cache.prefix')`.
+
+## Verify
+
+Feature test: warm the cache, then the second request runs no business-data queries (`expectsDatabaseQueryCount`, allowing cache-table reads on the database store); an unknown slug requested twice runs its lookup once.

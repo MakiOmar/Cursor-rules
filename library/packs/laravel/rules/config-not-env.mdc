@@ -1,0 +1,20 @@
+---
+description: Read runtime config via config(), never env() outside config files
+globs: **/app/**/*.php,**/routes/**/*.php
+alwaysApply: false
+---
+
+# Laravel: `config()`, not `env()`
+
+`env()` returns null after `php artisan config:cache`. Application code reads `config()`.
+
+- New env keys go into a `config/*.php` file, plus `.env.example` and the configuration doc (`core/docs-sync.mdc`).
+- `env()` is allowed only inside `config/*.php`.
+
+```php
+// BAD — empty after config:cache
+$n = (int) env('API_RATE_LIMIT_GUEST_PER_MINUTE', 120);
+
+// GOOD
+$n = (int) config('http-rate-limits.guest_per_minute', 120);
+```

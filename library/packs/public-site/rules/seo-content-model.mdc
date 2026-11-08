@@ -1,0 +1,31 @@
+---
+description: SEO data model — polymorphic SeoMeta, admin SEO fields on create/edit, defaults cascade, strict locale
+globs: **/app/Models/SeoMeta.php,**/app/**/Seo*.php,**/components/admin/**/*Seo*
+alwaysApply: false
+---
+
+# SEO data for content with public detail pages
+
+Any content type with a public detail page (post, project, service, product, landing page) persists a full SEO field set so admins tune it without code. Filter-only types (tags) are exempt unless they get their own URL.
+
+## Model
+
+- One polymorphic `SeoMeta` model (`morphTo seoable`), localized per row: `meta_title`, `meta_description`, `canonical_url`, `og_title`, `og_description`, `og_image`, `twitter_card`, `schema` (JSON-LD overrides). No per-table `meta_*` columns or parallel systems.
+- The owning model has `seoMeta()` (`morphOne`) and a unique, URL-safe `slug` (`admin/slugs.mdc`).
+- Public detail APIs eager-load `seoMeta` (`null` when none saved) and expose a stable lowercase `type` discriminator.
+- One authorized save endpoint (e.g. `PUT /<version>/seo/{type}/{id}`) with a Form Request; URLs must be `http(s)` or same-site paths.
+- SEO rows and default descriptions never fall back to another language.
+
+## Admin fields
+
+- SEO fields are normal form fields in an **SEO & Sharing** section on the content type's create and edit screens — never inside page/theme/form builders.
+- Live counters for title (≤ 60) and description (≤ 160); `og_image` through the media picker; `twitter_card` defaults to `summary_large_image`.
+- On create, save SEO after the record exists; if that call fails, keep the record and warn on the edit screen.
+
+## Defaults cascade
+
+Item SEO → content fields (title, excerpt, featured image) → per-type defaults → global defaults (Settings → SEO) → built-in. Resolve in one shared helper (with the title template) used by every public head.
+
+## Adding a new SEO type
+
+Register it in the backend type list, the frontend defaults types, and the Settings → SEO labels (all UI languages); pass its type key to the detail head helper; add it to the sitemap (`public-site/seo-head.mdc`).

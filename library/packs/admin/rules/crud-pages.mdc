@@ -1,0 +1,28 @@
+---
+description: Admin CRUD — list, create, and edit are separate routes/pages; shared create/edit form layout
+globs: **/routes/**/admin/**,**/pages/admin/**
+alwaysApply: false
+---
+
+# Admin content: one route per action
+
+Any managed content type with list, create, and edit uses **separate routes and files**. The list page never hosts inline create/edit forms.
+
+| Action | Route | Qwik City | Nuxt |
+|--------|-------|-----------|------|
+| List | `…/things` | `things/index.tsx` | `pages/admin/things/index.vue` |
+| Create | `…/things/new` | `things/new/index.tsx` | `pages/admin/things/new.vue` |
+| Edit | `…/things/:id` | `things/[id]/index.tsx` | `pages/admin/things/[id].vue` |
+
+- `new` is a sibling of the id route. If the id route can match `new`, redirect to `…/new` in its loader.
+- Match existing sibling routes before inventing a new shape. Hash-router SPAs use the same split (`#/things`, `#/things/new`, `#/things/123`; register `new` before the id route).
+- Loaders/actions for the list live only on the list route; form loaders/actions only on create and edit. Shared validation and mutations go in a `*-actions` module, not copied across routes. Qwik: unique `routeLoader$` / `routeAction$` export names per file.
+- **Modals** (`FormModal`) are only for small sub-records edited in context (a tag, a menu item, a key/value row) — never a substitute for the create or edit page.
+- Sidebar stays active on list, create, and edit (prefix match). Feature flags gate routes and nav (`laravel/feature-flags.mdc`).
+- New content type: scaffold all three routes before shipping UI.
+
+## Create / edit form layout
+
+- Content-language controls (primary + editing language) come first, above title and slug, through the project's shared language-fields component — don't rewire the selects per screen.
+- Basics in a two-column grid (`grid gap-4 md:grid-cols-2`): title/name and slug side by side; long fields (body, excerpt, description) span both columns.
+- SEO fields sit in their own section on the same screen (`public-site/seo-content-model.mdc`).

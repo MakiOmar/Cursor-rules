@@ -1,0 +1,26 @@
+---
+description: Rate limiters and client IP — trusted proxies, per-real-client keys, separate limits by cost
+globs: **/app/Providers/AppServiceProvider.php,**/config/http-rate-limits.php
+alwaysApply: false
+---
+
+# Rate limits
+
+Limiters are defined in `AppServiceProvider::boot()` and read their numbers from `config('http-rate-limits.*')` (`laravel/config-not-env.mdc`).
+
+## Must
+
+- **Key on the real client.** `$request->ip()` is the client only when proxies are trusted. Keep `TrustProxies` in the global stack (`laravel/middleware.mdc`) and list the CDN/reverse proxies in `TRUSTED_PROXIES` (`*` only when the app is reachable solely through that proxy). Otherwise every visitor behind the CDN shares one bucket.
+- **Server-side callers are not visitors.** An SSR frontend calling the API from one IP gets its own limiter or an allowlisted identity (shared-secret header validated via config), not the guest bucket.
+- **Separate limits by cost:** cached public reads, writes, auth, uploads, and bulk actions each get a named limiter. Don't share `api` between public reads and authenticated writes.
+- **One limiter per route.** Don't repeat the `api` limiter on a sub-group; use a different name when you mean a different limit.
+- New limits go in `config/http-rate-limits.php`, `.env.example`, and the configuration doc.
+
+## Avoid
+
+- Limiter keys built from attacker-controlled values (raw headers, unvalidated slugs) without a bounded fallback.
+- Disabling limits outside `local`.
+
+## Verify
+
+Two different `REMOTE_ADDR` values behind a trusted proxy header each get their own bucket.

@@ -1,0 +1,35 @@
+---
+description: Admin list pages — row selection, bulk actions, and per-row actions in a dropdown menu
+globs: **/routes/**/admin/**/index.tsx,**/pages/admin/**/index.vue,**/components/admin/**/*List*
+alwaysApply: false
+---
+
+# Admin listings: bulk actions and row-action menu
+
+Applies when creating a list page and when touching one that lacks these.
+
+## Selection and bulk actions (frontend)
+
+- A checkbox per row, plus **Select all** (current filtered rows) and **Cancel**. Keep the selection across filtering; drop deleted ids.
+- The bulk bar appears only when something is selected and shows the count.
+- **Bulk delete** is always offered (confirmed first). Add **type-specific bulk actions** wherever the model has a status-like field: approve/unapprove, publish/draft, active/inactive. Non-destructive actions need no confirm.
+- Update affected rows in place instead of refetching; disable bulk buttons while a request runs.
+- Export respects the selection when something is selected. New labels go in every UI language file.
+
+## Bulk endpoints (backend)
+
+- `POST /<version>/<things>/bulk-delete` and `POST /<version>/<things>/bulk-<action>`, registered **before** `apiResource`, with their own throttle limiter (`laravel/rate-limits.mdc`).
+- Payload `{ ids: int[] (min 1, max 500, exists), …action fields }` validated by a Form Request.
+- Authorize with `bulkDelete` / `bulkUpdate` abilities (`laravel/requests-and-policies.mdc`).
+- One `whereIn(...)->update()` / `->delete()`; return `{ updated|deleted: count, message }`.
+- Feature test for success, validation failure, and forbidden.
+
+## Row actions
+
+- Every per-row action (edit, open builder, view, duplicate, export, set default, delete) goes in the shared row-actions dropdown component (e.g. `AdminRowActionsMenu`), not inline buttons. Extend that component; never copy its markup.
+- The trigger's label names the row (`Actions: <row title>`) for screen readers; items are links or `<button type="button">` with `role="menuitem"`.
+- Order: edit → builder → view (`target="_blank" rel="noopener noreferrer"`) → secondary actions → separator → destructive (danger style, confirmed).
+- Hide actions the row can't take instead of showing dead items.
+- Actions column header is right-aligned (`text-end`); on card grids the menu sits in the card's top-end corner.
+- The menu is `position: fixed` so scrolling tables don't clip it and it opens upward near the viewport bottom; don't add `overflow-visible` hacks.
+- Stay inline: selection checkboxes, the bulk bar, cell-value controls (a role select, an approve toggle), and header actions (Create, Import, Export all).

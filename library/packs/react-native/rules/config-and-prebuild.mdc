@@ -1,0 +1,33 @@
+---
+description: Expo app config and config plugins — schema-valid keys, prebuild hygiene, idempotent native mods
+globs: **/app.json,**/app.config.js,**/app.config.ts,**/eas.json,**/plugins/**/*.js,**/plugins/**/*.ts,**/babel.config.js,**/metro.config.js
+alwaysApply: false
+---
+
+# Expo config and prebuild
+
+- Read the docs for the installed SDK (`https://docs.expo.dev/versions/v<SDK>.0.0/`), not `/latest`: config keys and plugin options change between majors.
+- `app.json` / `app.config.*` hold schema keys only. `npx expo-doctor` must pass its config-schema check; prebuild silently ignores unknown keys, so a "fix" there changes nothing.
+- `android/` and `ios/` are prebuild output. Change native files through a config plugin (`withAndroidManifest`, `withAppBuildGradle`, `withMainApplication`, `withInfoPlist`, `withDangerousMod`), then `npx expo prebuild --clean`. Never hand-edit generated files and expect the change to survive.
+
+## Config plugins
+
+- Idempotent: running prebuild twice gives the same files (check before inserting).
+- When a regex or anchor isn't found, throw with the plugin name and file — never skip silently.
+- Match `\r?\n`: Windows checkouts may have CRLF line endings.
+- Pin every native dependency a plugin adds (Maven `group:artifact:x.y.z`, CocoaPods version). Never `latest.release` or `+`.
+- Read package names and paths from the config (`config.android.package`), don't hard-code them.
+- Keep Android and iOS parity, or say in the plugin header that it is Android-only.
+
+## Permissions
+
+- Declare only what the app uses. Library plugins merge extras (image picker adds `RECORD_AUDIO`, contacts adds `WRITE_CONTACTS`): turn them off with plugin options (`microphonePermission: false`) or `android.blockedPermissions`, then check the merged manifest after prebuild.
+- Every iOS capability needs a user-facing `NS*UsageDescription` (plugin option or `ios.infoPlist`) in the app's UI language.
+- Exact alarms (`SCHEDULE_EXACT_ALARM`) only when the feature truly needs exact timing; Play reviews it.
+
+## Build tooling
+
+- `babel.config.js`: one Worklets / Reanimated plugin, listed last. If `babel-preset-expo` already injects it, don't add it twice.
+- `metro.config.js` on Windows: add `android/.gradle`, `android/build`, `android/app/build`, `ios/Pods`, and `ios/build` to `resolver.blockList` so Metro doesn't watch or lock them.
+- Bump `version` with `android.versionCode` / `ios.buildNumber` on every store build.
+- `extra`, `app.json`, and `EXPO_PUBLIC_*` values ship inside the binary — see `react-native/network-and-client-config.mdc`.

@@ -1,0 +1,28 @@
+---
+description: Runtime permissions and local notifications — explain, request, settings fallback, Android 13+ rules
+globs: **/*ermission*.ts,**/*ermission*.tsx,**/*otification*.ts,**/*otification*.tsx,**/reminders/**/*.ts
+alwaysApply: false
+---
+
+# Permissions and notifications
+
+## Permission flow
+
+1. Check the current status (`getPermissionsAsync`) — never request on screen mount.
+2. If undetermined: request in context of the feature, after a short explanation of why it's needed.
+3. If denied and `canAskAgain === false`: explain and offer a button to `Linking.openSettings()`.
+4. Re-check when `AppState` returns to `active`; the user may have changed it in Settings.
+- The feature degrades gracefully without the permission (manual entry instead of contacts, no reminder instead of a crash).
+
+## Local notifications
+
+- Android 13+ needs `POST_NOTIFICATIONS` at runtime; create the notification channel before scheduling.
+- Prefer inexact triggers. Exact alarms need `SCHEDULE_EXACT_ALARM` / `USE_EXACT_ALARM`, are reviewed by Play, and can be revoked: check before scheduling and fall back to inexact.
+- Reschedule from source data (idempotent: cancel by identifier, then schedule) on app start, after data changes, and after a restore — not by appending.
+- Stay under the OS limit of pending notifications (iOS 64): schedule the nearest window and refill.
+- Notification text uses the app language and never includes sensitive data on the lock screen.
+- Tapping a notification deep-links to the relevant screen through the router and handles a cold start.
+
+## Listeners
+
+- Every `addListener` / `addEventListener` (AppState, notifications, Keyboard, Linking) lives in an effect that removes it in the cleanup.

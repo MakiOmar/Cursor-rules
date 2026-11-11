@@ -20,6 +20,7 @@ A merged, deduplicated library of the rules from `cursorrules1/` (storefront pro
 | `public-site` | Public, indexable pages |
 | `cms-builder` | The Credocode visual builder / addon host |
 | `wordpress` | A WordPress theme or plugin (its `**/*.php` glob suits WordPress-only repos) |
+| `react-native` | A React Native / Expo app for Android and iOS (its `**/components/**` and `**/package.json` globs also fire in web frontends, so keep it to mobile repos) |
 
 Don't install packs a project doesn't use: agent-requested rule descriptions are listed in every chat even when the rule body isn't loaded.
 
@@ -27,12 +28,12 @@ Don't install packs a project doesn't use: agent-requested rule descriptions are
 
 | Trigger | Frontmatter | Cost |
 |---------|-------------|------|
-| Always | `alwaysApply: true` | Full body in every chat — only `core/00-router.mdc` (~1.4 KB) |
+| Always | `alwaysApply: true` | Full body in every chat — only `core/00-router.mdc` (~1.5 KB) |
 | Auto-attached | `globs: …` | Body loads only when a matching file is in context |
 | Agent-requested | `description` only | Description in every chat; body loads when the agent decides it's relevant |
 | Manual | none | Only when `@`-mentioned |
 
-Before the merge, ~36 KB (~9,000 tokens) of always-on rules loaded in every chat. With every pack installed it is now the router (~350 tokens) plus the descriptions of 7 agent-requested rules (~200 tokens).
+Before the merge, ~36 KB (~9,000 tokens) of always-on rules loaded in every chat. With every pack installed it is now the router (~380 tokens) plus the descriptions of 7 agent-requested rules (~200 tokens).
 
 ## Global User Rule
 

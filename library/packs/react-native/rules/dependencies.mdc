@@ -1,0 +1,15 @@
+---
+description: React Native and Expo dependencies — expo install, SDK-pinned versions, no stack drift
+globs: **/package.json
+alwaysApply: false
+---
+
+# React Native and Expo dependencies
+
+- Add or update native-facing packages with `npx expo install <pkg>` (never plain `npm install` for them), so the version matches the installed Expo SDK.
+- `react`, `react-dom`, `react-native`, `react-native-reanimated`, `react-native-worklets`, `react-native-gesture-handler`, `react-native-screens`, `react-native-safe-area-context`, and every `expo-*` package are pinned by the SDK. Never bump one alone because `npm outdated` shows a newer major; they move together in an SDK upgrade (`expo-upgrade` skill).
+- Keep the project aligned within its SDK: `npx expo install --check` and `npx expo-doctor` report nothing before a release. Fix with `npx expo install --fix` in its own commit, then rebuild the native app (a JS reload is not enough).
+- Don't add a state, data, form, list, or image library (TanStack Query, Zustand, MMKV, react-hook-form, Zod, FlashList, expo-image, keyboard-controller) as a side effect of a task. Use what the project has; propose an addition separately with the reason.
+- Prefer packages that support the New Architecture and the installed React Native version; check the package's compatibility notes before installing.
+- Replace abandoned packages with known advisories (for example the npm `xlsx` 0.18.x line — use SheetJS's own distribution) when they parse user-supplied files.
+- Lockfile changes ship in the same commit as `package.json`.

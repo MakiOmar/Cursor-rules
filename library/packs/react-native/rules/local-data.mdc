@@ -1,0 +1,30 @@
+---
+description: On-device data — expo-sqlite transactions and migrations, storage choice, safe backup and restore
+globs: **/db/**/*.ts,**/repositories/**/*.ts,**/*storage*.ts,**/*Storage*.ts,**/*backup*.ts
+alwaysApply: false
+---
+
+# On-device data and storage
+
+## Where data lives
+
+| Data | Store |
+|------|-------|
+| Tokens, license keys, PINs, activation ids | `expo-secure-store` only — never SQLite, AsyncStorage, logs, or backups |
+| Relational app data | `expo-sqlite` |
+| Small preferences and flags | AsyncStorage (or MMKV if the project already has it) |
+| Files, exports, backups, images | `expo-file-system` |
+
+## SQLite
+
+- Values always as bound parameters. Table and column names are never interpolated from input; when they must be dynamic, check them against a whitelist (`PRAGMA table_info`).
+- One logical operation = one transaction (`withTransactionAsync` or the project's serialized wrapper). Multi-row saves (enroll many, generate schedules, bulk updates) must not leave partial results when a row fails.
+- Schema changes are versioned migrations (`PRAGMA user_version`) that run once at boot and are safe on databases created by every shipped version.
+- Index the columns used in list filters and joins; page large lists in SQL (`LIMIT`/`OFFSET` or keyset) instead of filtering in JS.
+- Keep the UI responsive during long writes: chunk and yield between transactions only when each chunk leaves the database consistent.
+
+## Backup and restore
+
+- Export a versioned format (`version`, app version, table list). Exclude secrets and license data.
+- Restore is destructive: validate the whole file first (version, required tables, known columns), write a safety snapshot of the current database, then replace inside one transaction or into a staged database that is swapped in on success. On failure, roll back or restore the snapshot and tell the user nothing was changed.
+- After restore, reopen the connection and run migrations so older backups match the current schema.

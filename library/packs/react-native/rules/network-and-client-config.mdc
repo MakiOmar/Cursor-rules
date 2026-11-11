@@ -1,0 +1,29 @@
+---
+description: Mobile networking and client config — one fetch wrapper, transient vs final errors, public bundle values
+globs: **/api/**/*.ts,**/api.ts,**/config/**/*.ts,**/license/**/*.ts
+alwaysApply: false
+---
+
+# Networking and client config
+
+## Everything in the app is public
+
+- `EXPO_PUBLIC_*`, `app.json` `extra`, and any string literal ship in the APK/IPA and can be extracted. Only identifiers meant to be public go there (product/API identifiers, client tokens SDKs expect in the binary).
+- No literal credential fallback in source (`process.env.X || "real-key"`). Missing config fails the build or the request, not silently uses a committed value. If a key was committed, rotate it.
+- Protect server endpoints with server-side scope and rate limits (per device and per IP for trial or signup endpoints); never rely on a client key staying secret.
+
+## Requests
+
+- All HTTP goes through one wrapper per backend: base URL, headers, JSON parsing, and a timeout via `AbortController`.
+- Validate response shapes at the boundary with a small type guard before using them; don't trust `as T`.
+- Classify failures:
+  - network error, timeout, 5xx, 429 → transient: keep the last good state (offline grace), retry later with backoff;
+  - 4xx with a reason → final: show the mapped, user-safe message.
+- Never show raw `HTTP 503`, hosts, URLs, or stack traces to users; map to localized messages.
+- Re-check entitlement or session when the app returns to the foreground (throttled), not only on cold start.
+
+## Offline entitlement (licenses, subscriptions)
+
+- Grace periods start from the last successful server check, never from a local save.
+- Enforce a known `expires_at` even while offline.
+- Changing plans (trial → paid) must not release the old entitlement until the new one is confirmed.

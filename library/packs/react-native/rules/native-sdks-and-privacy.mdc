@@ -1,0 +1,27 @@
+---
+description: Third-party native SDKs in React Native — typed facades, no-op fallbacks, store privacy disclosures
+globs: **/analytics/**/*.ts,**/modules/**,**/plugins/**/*.kt,**/plugins/**/*.java,**/plugins/**/*.swift,**/plugins/**/*.m
+alwaysApply: false
+---
+
+# Native SDKs and privacy
+
+## Facade
+
+- UI code never imports a native SDK (analytics, ads, crash reporting, payments, attribution). One typed module wraps it; screens call that module.
+- The facade no-ops when the native module is missing (Expo Go, web, unsupported platform) and never throws into a render or a data write.
+- Name events after the business action using the SDK's standard events where they exist (purchase, start trial, contact/lead). Log from the user action or service, not from low-level repository writes.
+- Never send personal data (names, phones, notes, device ids, keys) as event parameters.
+
+## Native code
+
+- New native modules use the Expo Modules API (Kotlin/Swift) where possible; legacy `NativeModules` bridges still work through interop but are the fallback.
+- Pull the smallest SDK artifact that covers the feature (for example Meta's `facebook-core` for app events, not the full SDK that adds login and share activities) at a pinned version.
+- Remove activities, services, and permissions the SDK merges but the app doesn't use; check the merged manifest after prebuild.
+- iOS: add the SDK's privacy manifest entries and, for tracking, App Tracking Transparency.
+
+## Disclosures (same change, not later)
+
+- Adding or changing an SDK that collects data (auto-logged events, advertising ID, crash data) updates, in the same change: the privacy policy, Play Data safety, App Store privacy details, and any consent flow.
+- Auto-logging and advertising-ID collection stay off unless there is a decision to use them and the disclosures say so.
+- Marketing claims (store listing, website: "no ads SDKs", "data stays on device") must still be true after the change.

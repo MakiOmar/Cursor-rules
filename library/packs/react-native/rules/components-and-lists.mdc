@@ -1,0 +1,32 @@
+---
+description: React Native components — Pressable, safe areas, FlatList performance, shadows, animations, a11y
+globs: **/components/**/*.tsx,**/screens/**/*.tsx
+alwaysApply: false
+---
+
+# React Native components and lists
+
+## Components
+
+- Reuse the project's UI primitives (buttons, fields, cards, dialogs, toasts) before creating new ones; never `Alert.alert` when the app has its own dialog.
+- `Pressable` for touchables, with a hit area of at least 44×44 (`hitSlop` on small icons) and visible press feedback (`android_ripple` on Android, opacity on iOS).
+- Every icon-only control has `accessibilityRole` and `accessibilityLabel` in the UI language.
+- Text only inside `<Text>`; bound font scaling (`maxFontSizeMultiplier`) only on tight badges and tab labels, not body text.
+- Colors come from the theme hook so dark mode and themes apply; no static color imports in components that render themed surfaces.
+
+## Safe areas
+
+- `SafeAreaView` / `useSafeAreaInsets` from `react-native-safe-area-context`, never from `react-native`. Android is edge-to-edge: pad content and bottom bars with insets.
+
+## Lists
+
+- `FlatList` (or `FlashList` if the project already has it) for any unbounded data; give it `style={{ flex: 1 }}` or a bounded parent.
+- Stable `keyExtractor` from the record id, never the index.
+- Never put a vertical virtualized list inside a vertical `ScrollView`; use `ListHeaderComponent` / `ListFooterComponent`.
+- Memoize `renderItem` and row components when rows are non-trivial; page or window large data instead of loading everything.
+
+## Visuals and motion
+
+- Shadows: RN 0.76+ `boxShadow` works on both platforms; with legacy `shadow*` props add `elevation` on Android, and never give an elevated view a transparent background.
+- Images: use what the project has (`expo-image` only if installed); always set explicit size and `resizeMode` / `contentFit`.
+- Animations with Reanimated shared values; animate `transform` and `opacity`, use layout animations for size changes.

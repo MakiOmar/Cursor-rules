@@ -1,0 +1,18 @@
+---
+description: Expo Router screens and layouts — thin routes, root gates, splash, error boundaries, back handling
+globs: **/app/**/*.tsx,**/app/**/*.ts
+alwaysApply: false
+---
+
+# Expo Router screens and layouts
+
+- Route files stay thin: layout, wiring, and navigation. Data access, calculations, and side effects live in hooks, services, or repositories under `src/`.
+- App-wide gates (auth, license, onboarding, app lock) sit in the root `_layout.tsx`, never per tab or per screen.
+- Splash: call `SplashScreen.preventAutoHideAsync()` at module scope and hide once the root is ready. A fail-safe timeout must not fire after boot succeeded and must not hide a real boot error or skip a gate that is still loading.
+- Export `ErrorBoundary` from the root layout (re-export expo-router's or provide one with a retry action) so a render error never shows a white screen.
+- `Link`: pass a single style object, never a style array. Use `asChild` with a `Pressable` for custom content.
+- Typed routes (`experiments.typedRoutes`): build hrefs with the generated types; don't cast to `any` or `as Href` to silence errors.
+- Read params with `useLocalSearchParams` and validate them (ids can be missing or non-numeric after a deep link).
+- Modals and custom sheets close on Android back: `Modal onRequestClose`, or `BackHandler` in a focus effect that removes its listener.
+- Screens with lists or inputs follow `react-native/components-and-lists.mdc` and `react-native/forms-and-keyboard.mdc`.
+- Header buttons and menu actions read current state when pressed (refs or callbacks from a store), not values captured at first render.

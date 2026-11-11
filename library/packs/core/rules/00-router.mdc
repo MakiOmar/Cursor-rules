@@ -17,8 +17,9 @@ Rules are grouped in pack folders under `.cursor/rules/`. Only installed packs e
 | `public-site/` | Public pages: SEO, head tags, assets, contact privacy |
 | `cms-builder/` | Visual page/theme builder and addon host (Credocode-based projects) |
 | `wordpress/` | WordPress themes and plugins |
+| `react-native/` | React Native / Expo apps (`app/`, `src/`, `app.json`, `plugins/`) |
 
-Skills (load on demand from `.cursor/skills/`): `new-project`, `deploy`, `laravel-hardening`, `qwik-ssr-debug`, `builder-json-translation`.
+Skills (load on demand from `.cursor/skills/`): `new-project`, `deploy`, `laravel-hardening`, `qwik-ssr-debug`, `builder-json-translation`, `expo-upgrade`.
 
 ## Git
 

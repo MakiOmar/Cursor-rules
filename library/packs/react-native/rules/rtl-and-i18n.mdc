@@ -1,0 +1,17 @@
+---
+description: React Native RTL and localization — I18nManager at boot, reload on change, mirrored layout, digits
+globs: **/i18n/**,**/locales/**,**/theme/**/*.ts,**/theme/**/*.tsx
+alwaysApply: false
+---
+
+# RTL and localization
+
+- Layout direction is decided once at boot: `I18nManager.allowRTL(isRtl)` + `I18nManager.forceRTL(isRtl)`, then reload (`expo-updates` `reloadAsync` or `DevSettings.reload` in dev) only when the value changed. Gate the first render on that bootstrap so screens never paint in the wrong direction.
+- `expo-localization` plugin: `supportsRTL: true`; `forcesRTL: true` only for RTL-only apps. If the app switches language in-app, make sure the native localization module doesn't reset `forceRTL` on every start (check the SDK's behavior; a config plugin may be needed). `android.supportsRtl` is not an Expo config key.
+- Under RTL, Yoga mirrors `flexDirection: "row"`, `left`/`right`, margins, and paddings. Use `start`/`end` (`marginStart`, `paddingEnd`) and don't hand-flip what the engine already mirrors. Directional icons (back arrows, chevrons) flip with the direction.
+- Text: set `textAlign` / `writingDirection` explicitly on multi-line text and inputs; Android and iOS defaults differ.
+- Every user-facing string goes through the i18n layer, with keys present in every supported language. No user-visible strings hard-coded in components, errors, or notifications.
+- Numbers, dates, and currency through one formatting helper (locale digits, month names). Parse user input after normalizing Arabic-Indic and Persian digits.
+- Phones, license keys, codes, and URLs render LTR inside RTL text (wrap with LTR marks or a dedicated text style).
+- Fonts: load custom fonts before first paint; check that the font covers every script the app shows (Arabic, Latin, digits).
+- Store screenshots and onboarding copy for each language when the store listing is localized.

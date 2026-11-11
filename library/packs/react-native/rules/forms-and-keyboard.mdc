@@ -1,0 +1,27 @@
+---
+description: React Native forms and keyboard — edge-to-edge avoidance, TextInput props, submit locking
+globs: **/*form*.tsx,**/*Form*.tsx,**/*Field*.tsx,**/*Input*.tsx,**/components/ui.tsx
+alwaysApply: false
+---
+
+# Forms and keyboard
+
+## Keyboard avoidance (Android is edge-to-edge)
+
+- The Android window no longer resizes for the keyboard. Give `KeyboardAvoidingView` a `behavior` on both platforms (usually `"padding"`); a view with no behavior on Android stays under the keyboard. Under a header, pass `useHeaderHeight()` as `keyboardVerticalOffset`.
+- Never combine `behavior="padding"` with `softwareKeyboardLayoutMode: "pan"` (the input moves twice).
+- Put form content in a `ScrollView` with `keyboardShouldPersistTaps="handled"`; don't vertically center a form whose fields the keyboard would cover.
+- One keyboard approach per app: a shared screen wrapper (or `react-native-keyboard-controller` if installed), not a different fix per screen. Test on a real Android 15+ device and on iOS.
+- Bottom tabs: `tabBarHideOnKeyboard: true` when tabs would sit above the keyboard.
+
+## Inputs
+
+- Set on every `TextInput` (or once in the shared field component, overridable per use): `keyboardType` (`phone-pad`, `numeric`, `decimal-pad`, `email-address`), `autoCapitalize`, `autoCorrect={false}` for codes, keys, names and phones, and `autoComplete` / `textContentType` where autofill helps.
+- Multi-field forms chain focus with `returnKeyType="next"` and `onSubmitEditing`, ending with `"done"`.
+- RTL apps: align input text with the reading direction explicitly (`textAlign`, `writingDirection`); keep numbers, phones, and keys LTR.
+
+## Validation and submit
+
+- Use the project's existing form approach. Don't introduce a form or schema library inside a feature task (see `react-native/dependencies.mdc`).
+- Validate on submit; required-field errors name the field. Normalize digits (Arabic-Indic to Latin) before parsing numbers.
+- Disable submit and destructive buttons while saving or deleting, and re-enable in `finally`. Show errors through the app's dialog or toast, with a user-safe message.

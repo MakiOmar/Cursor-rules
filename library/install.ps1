@@ -16,6 +16,9 @@ Packs are discovered from the packs/ folder, so a new pack folder is installable
 .\install.ps1 -Target D:\Projects\wp-plugin -Packs wordpress
 
 .EXAMPLE
+.\install.ps1 -Target D:\Projects\mobile-app -Packs react-native
+
+.EXAMPLE
 .\install.ps1 -Target D:\Projects\shop -Packs laravel -Force   # overwrite files already in the project
 
 .EXAMPLE
